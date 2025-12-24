@@ -28,9 +28,6 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'ru',
     locales: ['ru'],
@@ -43,11 +40,7 @@ const config = {
       ({
         docs: {
           sidebarPath: './sidebars.js',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/Amoeba164/high-time-workflow/tree/main/',
-          // Версионирование
+          editUrl: 'https://github.com/Amoeba164/high-time-workflow/tree/main/',
           lastVersion: 'current',
           versions: {
             current: {
@@ -58,7 +51,7 @@ const config = {
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
         },
-        blog: false, // Отключаем блог, он вам не нужен
+        blog: false,
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -69,7 +62,6 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       navbar: {
         title: 'High Time Workflow',
@@ -102,14 +94,8 @@ const config = {
           {
             title: 'Документация',
             items: [
-              {
-                label: 'Введение',
-                to: '/docs/intro',
-              },
-              {
-                label: 'Уроки',
-                to: '/docs/lessons/lesson-0',
-              },
+              {label: 'Введение', to: '/docs/intro'},
+              {label: 'Уроки', to: '/docs/lessons/lesson-0'},
             ],
           },
           {
@@ -127,13 +113,6 @@ const config = {
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
-      },
-      // Поиск по документации
-      algolia: {
-        // Если настроите Algolia DocSearch, раскомментируйте и добавьте ключи
-        // appId: 'YOUR_APP_ID',
-        // apiKey: 'YOUR_SEARCH_API_KEY',
-        // indexName: 'YOUR_INDEX_NAME',
       },
     }),
 };
