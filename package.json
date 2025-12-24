@@ -14,12 +14,7 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "version": "docusaurus docs:version",
-    "sync": "node sync-filesystem.js",
-    "sync:watch": "node sync-filesystem-watch.js",
-    "dev": "npm run sync && npm start",
-    "dev:watch": "concurrently \"npm run sync:watch\" \"npm start\"",
-    "prebuild": "npm run sync"
+    "version": "docusaurus docs:version"
   },
   "dependencies": {
     "@docusaurus/core": "^3.5.2",
@@ -34,21 +29,11 @@
     "@docusaurus/module-type-aliases": "^3.5.2",
     "@docusaurus/tsconfig": "^3.5.2",
     "@docusaurus/types": "^3.5.2",
-    "chokidar": "^3.5.3",
-    "concurrently": "^8.2.2",
     "typescript": "~5.2.2"
   },
   "browserslist": {
-    "production": [
-      ">0.5%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 3 chrome version",
-      "last 3 firefox version",
-      "last 5 safari version"
-    ]
+    "production": [">0.5%", "not dead", "not op_mini all"],
+    "development": ["last 3 chrome version", "last 3 firefox version", "last 5 safari version"]
   },
   "engines": {
     "node": ">=18.0"
