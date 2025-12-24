@@ -1,10 +1,5 @@
 // @ts-check
-// `@type` JSDoc annotations allow editor autocompletion and type checking
-// (when paired with `@ts-check`).
-// There are various equivalent ways to declare your Docusaurus config.
-// See: https://docusaurus.io/docs/api/docusaurus-config
-
-import {themes as prismThemes} from 'prism-react-renderer';
+import { themes as prismThemes } from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -12,16 +7,11 @@ const config = {
   tagline: 'Документация по процессам и экспериментам',
   favicon: 'img/favicon.ico',
 
-  // Set the production url of your site here
   url: 'https://amoeba164.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/high-time-workflow/',
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'Amoeba164', // Usually your GitHub org/user name.
-  projectName: 'high-time-workflow', // Usually your repo name.
+  organizationName: 'Amoeba164',
+  projectName: 'high-time-workflow',
   deploymentBranch: 'gh-pages',
   trailingSlash: false,
 
@@ -40,14 +30,8 @@ const config = {
       ({
         docs: {
           sidebarPath: './sidebars.js',
+          routeBasePath: 'docs',
           editUrl: 'https://github.com/Amoeba164/high-time-workflow/tree/main/',
-          lastVersion: 'current',
-          versions: {
-            current: {
-              label: 'Текущая версия',
-              path: '/',
-            },
-          },
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
         },
@@ -65,21 +49,13 @@ const config = {
       image: 'img/docusaurus-social-card.jpg',
       navbar: {
         title: 'High Time Workflow',
-        logo: {
-          alt: 'High Time Logo',
-          src: 'img/logo.svg',
-        },
+        logo: { alt: 'High Time Logo', src: 'img/logo.svg' },
         items: [
           {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Документация',
-          },
-          {
-            type: 'docsVersionDropdown',
-            position: 'right',
-            dropdownActiveClassDisabled: true,
           },
           {
             href: 'https://github.com/Amoeba164/high-time-workflow',
@@ -93,10 +69,7 @@ const config = {
         links: [
           {
             title: 'Документация',
-            items: [
-              {label: 'Введение', to: '/docs/intro'},
-              {label: 'Уроки', to: '/docs/lessons/lesson-0'},
-            ],
+            items: [{ label: 'Открыть docs', to: '/docs' }],
           },
           {
             title: 'Ресурсы',
@@ -114,6 +87,7 @@ const config = {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
       },
+      // ВАЖНО: Algolia НЕ задаём вообще, иначе Docusaurus валидирует поля и падает
     }),
 };
 
