@@ -2,13 +2,17 @@
 
 /**
  * Автоматическая синхронизация файловой системы репозитория с Docusaurus
- * 
+ *
  * Этот скрипт:
- * 1. Сканирует всю файловую систему репозитория
- * 2. Исключает системные папки
- * 3. Автоматически создаёт/обновляет структуру в docs/
- * 4. Генерирует sidebars.js на основе файловой системы
- * 5. Добавляет frontmatter если его нет
+ * 1. Сканирует файловую систему репозитория
+ * 2. Исключает системные папки/файлы
+ * 3. Копирует MD/MDX в docs/ с той же структурой
+ * 4. Добавляет frontmatter если его нет
+ * 5. Создаёт index.md для папок (опционально)
+ *
+ * Важно:
+ * - НЕ добавляем sidebar_position: auto (Docusaurus требует число)
+ * - НЕ перетираем существующий sidebars.js (он у тебя ручной и корректный)
  */
 
 const fs = require('fs');
@@ -19,13 +23,9 @@ const path = require('path');
 // ==========================================
 
 const config = {
-  // Корень репозитория
   repoRoot: process.cwd(),
-  
-  // Папка docs для Docusaurus
   docsDir: path.join(process.cwd(), 'docs'),
-  
-  // Системные папки которые НЕ синхронизируем
+
   excludeDirs: [
     'node_modules',
     '.git',
@@ -34,13 +34,12 @@ const config = {
     '.docusaurus',
     'static',
     'src',
-    'docs', // сама папка docs не копируется рекурсивно
+    'docs', // папка docs не копируется рекурсивно
     '.cache-loader',
     'versioned_docs',
     'versioned_sidebars',
   ],
-  
-  // Системные файлы которые НЕ синхронизируем
+
   excludeFiles: [
     'package.json',
     'package-lock.json',
@@ -53,17 +52,10 @@ const config = {
     'LICENSE',
     '.DS_Store',
   ],
-  
-  // Расширения файлов которые синхронизируем
-  includeExtensions: [
-    '.md',
-    '.mdx',
-  ],
-  
-  // Автоматически добавлять frontmatter если его нет
+
+  includeExtensions: ['.md', '.mdx'],
+
   addFrontmatter: true,
-  
-  // Создавать автоматические index.md для папок
   createIndexFiles: true,
 };
 
@@ -71,102 +63,76 @@ const config = {
 // УТИЛИТЫ
 // ==========================================
 
-/**
- * Проверяет является ли папка системной
- */
 function isExcludedDir(dirName) {
   return config.excludeDirs.includes(dirName) || dirName.startsWith('.');
 }
 
-/**
- * Проверяет является ли файл системным
- */
 function isExcludedFile(fileName) {
   return config.excludeFiles.includes(fileName) || fileName.startsWith('.');
 }
 
-/**
- * Проверяет нужно ли синхронизировать файл
- */
 function shouldSyncFile(fileName) {
   const ext = path.extname(fileName);
   return config.includeExtensions.includes(ext) && !isExcludedFile(fileName);
 }
 
-/**
- * Проверяет есть ли frontmatter в файле
- */
 function hasFrontmatter(content) {
   return content.trim().startsWith('---');
 }
 
 /**
  * Генерирует frontmatter для файла
+ * ВАЖНО: sidebar_position НЕ добавляем.
  */
-function generateFrontmatter(filePath, fileName) {
-  const title = fileName.replace(/\.mdx?$/, '').replace(/[-_]/g, ' ');
-  
+function generateFrontmatter(_filePath, fileName) {
+  const title = fileName
+    .replace(/\.mdx?$/, '')
+    .replace(/[-_]/g, ' ')
+    .trim();
+
   return `---
 title: ${title}
-sidebar_position: auto
 ---
 
 `;
 }
 
-/**
- * Добавляет frontmatter если его нет
- */
 function ensureFrontmatter(filePath, content) {
   if (!config.addFrontmatter) return content;
-  
+
   if (!hasFrontmatter(content)) {
     const fileName = path.basename(filePath);
     const frontmatter = generateFrontmatter(filePath, fileName);
     return frontmatter + content;
   }
-  
+
   return content;
 }
 
-/**
- * Создаёт папку если её нет
- */
 function ensureDir(dirPath) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
   }
 }
 
-/**
- * Копирует файл с обработкой
- */
 function syncFile(sourcePath, targetPath) {
   const content = fs.readFileSync(sourcePath, 'utf8');
   const processedContent = ensureFrontmatter(sourcePath, content);
-  
-  // Создаём папку если нужно
+
   ensureDir(path.dirname(targetPath));
-  
-  // Записываем файл
   fs.writeFileSync(targetPath, processedContent, 'utf8');
-  
+
   console.log(`✓ Synced: ${path.relative(config.repoRoot, sourcePath)}`);
 }
 
-/**
- * Создаёт автоматический index.md для папки
- */
 function createIndexFile(dirPath, dirName) {
   if (!config.createIndexFiles) return;
-  
+
   const indexPath = path.join(dirPath, 'index.md');
-  
-  // Не перезаписываем существующий index
   if (fs.existsSync(indexPath)) return;
-  
-  const title = dirName.replace(/[-_]/g, ' ');
-  
+
+  const title = dirName.replace(/[-_]/g, ' ').trim();
+
   const content = `---
 title: ${title}
 sidebar_position: 1
@@ -180,7 +146,7 @@ sidebar_position: 1
 
 Выберите раздел в боковом меню слева.
 `;
-  
+
   fs.writeFileSync(indexPath, content, 'utf8');
   console.log(`✓ Created index: ${path.relative(config.repoRoot, indexPath)}`);
 }
@@ -189,41 +155,31 @@ sidebar_position: 1
 // ОСНОВНАЯ ЛОГИКА
 // ==========================================
 
-/**
- * Рекурсивно сканирует директорию и синхронизирует файлы
- */
 function syncDirectory(sourceDir, targetDir, level = 0) {
-  // Создаём целевую директорию
   ensureDir(targetDir);
-  
-  // Читаем содержимое
+
   const items = fs.readdirSync(sourceDir);
-  
+
   items.forEach(item => {
     const sourcePath = path.join(sourceDir, item);
     const stat = fs.statSync(sourcePath);
-    
+
     if (stat.isDirectory()) {
-      // Пропускаем системные папки
       if (isExcludedDir(item)) {
         console.log(`⊘ Skipped dir: ${item}`);
         return;
       }
-      
-      // Рекурсивно обрабатываем папку
+
       const newTargetDir = path.join(targetDir, item);
       syncDirectory(sourcePath, newTargetDir, level + 1);
-      
-      // Создаём index.md для папки
+
       createIndexFile(newTargetDir, item);
-      
-    } else if (stat.isFile()) {
-      // Пропускаем системные файлы
-      if (!shouldSyncFile(item)) {
-        return;
-      }
-      
-      // Синхронизируем файл
+      return;
+    }
+
+    if (stat.isFile()) {
+      if (!shouldSyncFile(item)) return;
+
       const targetPath = path.join(targetDir, item);
       syncFile(sourcePath, targetPath);
     }
@@ -231,80 +187,69 @@ function syncDirectory(sourceDir, targetDir, level = 0) {
 }
 
 /**
- * Генерирует sidebars.js автоматически на основе структуры docs/
+ * sidebars.js
+ * - Если файл уже существует — НЕ ТРОГАЕМ (чтобы не ломать sidebarId tutorialSidebar).
+ * - Если его нет — создадим минимальный с tutorialSidebar и autogenerated.
  */
 function generateSidebars() {
   const sidebarsPath = path.join(config.repoRoot, 'sidebars.js');
-  
+
+  if (fs.existsSync(sidebarsPath)) {
+    console.log('⊘ sidebars.js exists, skipping generation');
+    return;
+  }
+
   const content = `/**
  * Автоматически сгенерированный sidebars.js
  * 
- * Этот файл создан автоматически на основе структуры папки docs/
- * Для регенерации запустите: npm run sync-filesystem
+ * Если вы хотите ручную структуру — создайте sidebars.js сами,
+ * и генерация будет пропущена.
  */
 
 // @ts-check
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
-  // Автоматическая генерация из всей структуры docs/
-  mainSidebar: [
+  tutorialSidebar: [
     {
       type: 'autogenerated',
-      dirName: '.', // Генерируем из корня docs/
+      dirName: '.',
     },
   ],
 };
 
-module.exports = sidebars;
+export default sidebars;
 `;
-  
+
   fs.writeFileSync(sidebarsPath, content, 'utf8');
   console.log('✓ Generated sidebars.js');
 }
 
-/**
- * Очищает docs/ от файлов которых нет в исходниках
- */
 function cleanOrphanedFiles() {
   console.log('\n🧹 Checking for orphaned files...');
-  
-  // TODO: Реализовать если нужно
-  // Пока не удаляем файлы автоматически для безопасности
-  
+  // TODO: безопасная очистка при необходимости
   console.log('✓ Cleanup check complete');
 }
 
-/**
- * Главная функция
- */
 function main() {
   console.log('🚀 Starting filesystem sync...\n');
   console.log(`Repository root: ${config.repoRoot}`);
   console.log(`Docs directory: ${config.docsDir}\n`);
-  
-  // Синхронизируем файлы
+
   syncDirectory(config.repoRoot, config.docsDir);
-  
-  // Генерируем sidebars.js
-  console.log('\n📝 Generating sidebars...');
+
+  console.log('\n📝 Sidebars...');
   generateSidebars();
-  
-  // Проверяем orphaned файлы
+
   cleanOrphanedFiles();
-  
+
   console.log('\n✅ Filesystem sync complete!');
   console.log('\nРезультат:');
   console.log('  • Все MD/MDX файлы синхронизированы');
   console.log('  • Frontmatter добавлен где нужно');
   console.log('  • Index файлы созданы для папок');
-  console.log('  • sidebars.js сгенерирован');
   console.log('\nЗапустите: npm start для проверки');
 }
-
-// ==========================================
-// ЗАПУСК
-// ==========================================
 
 if (require.main === module) {
   main();
