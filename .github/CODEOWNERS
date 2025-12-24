@@ -1,0 +1,37 @@
+# CODEOWNERS file
+# Каждый файл/папка имеет владельца, который автоматически становится ревьюером PR
+# 
+# Замените примеры GitHub username'ов на реальные username'ы вашей команды
+# Формат: /путь/к/файлу @github-username
+# 
+# Документация: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Владелец по умолчанию для всего репозитория
+* @Amoeba164
+
+# Уроки
+/docs/lessons/lesson-0.md @product-manager
+/docs/lessons/lesson-1.md @product-manager
+/docs/lessons/lesson-2.md @marketer
+/docs/lessons/lesson-3.md @sales-lead
+/docs/lessons/lesson-4.md @product-manager @ceo
+
+# Анализ
+/docs/analysis/* @product-manager @analyst
+
+# Workflow документация
+/docs/workflows/* @tech-lead
+
+# Конфигурация Docusaurus
+/docusaurus.config.js @tech-lead
+/sidebars.js @tech-lead
+/package.json @tech-lead
+
+# GitHub Actions
+/.github/* @tech-lead
+
+# Статические файлы (изображения, дизайн)
+/static/* @designer
+
+# README и документация по проекту
+/README.md @Amoeba164 @tech-lead

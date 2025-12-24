@@ -1,0 +1,65 @@
+name: Auto Sync Filesystem to Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'
+      - '**.mdx'
+      - '!docs/**'  # Игнорируем изменения в самой папке docs
+  
+  workflow_dispatch:  # Можно запустить вручную
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run filesystem sync
+        run: |
+          echo "🔄 Syncing filesystem to docs..."
+          node sync-filesystem.js
+      
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit synced files
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/ sidebars.js
+          git commit -m "🤖 Auto-sync: Update docs from filesystem"
+          git push
+      
+      - name: Build website
+        run: npm run build
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
